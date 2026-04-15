@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliment Generator</title>
+    
+    <!-- 
+      Preconnecting to Google Fonts for performance optimization.
+      Fraunces is used for expressive headings/quotes.
+      DM Sans is used for highly legible UI elements.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* * DESIGN SYSTEM & DESIGN TOKENS
+         * Centralizing colors and fonts using CSS Custom Properties for maintainability 
+         * and to enforce a strict design system.
+         */
+        :root {
+            --bg-color: #F9F7F3;         /* Soft Pearl */
+            --text-color: #3D405B;       /* Deep Slate */
+            --primary-accent: #E07A5F;   /* Terracotta Coral */
+            --secondary-accent: #81B29A; /* Calm Sage */
+            
+            --font-display: 'Fraunces', serif;
+            --font-ui: 'DM Sans', sans-serif;
+            
+            --transition-speed: 0.3s;
+            --border-radius: 12px;
+            --shadow-sm: 0 4px 6px rgba(61, 64, 91, 0.08);
+            --shadow-md: 0 10px 25px rgba(61, 64, 91, 0.12);
+        }
+
+        /* * RESET & BASE STYLES
+         * Ensuring cross-browser consistency and accessible sizing.
+         */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* * LAYOUT ARCHITECTURE
+         * Using a centered card layout to focus user attention on the core task.
+         */
+        .app-container {
+            width: 100%;
+            max-width: 540px;
+            background-color: #FFFFFF;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 3rem 2.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        /* * TYPOGRAPHY
+         */
+        .app-header {
+            margin-bottom: 2rem;
+        }
+
+        .app-title {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-subtitle {
+            font-size: 1rem;
+            color: rgba(61, 64, 91, 0.7); /* Muted Deep Slate */
+        }
+
+        /* * INPUT GROUP
+         * Styled for clarity with explicit, visible labels for optimal accessibility.
+         */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-family: var(--font-ui);
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        /* Custom focus rings for WCAG compliance and keyboard navigation */
+        .name-input:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(224, 122, 95, 0.2);
+        }
+
+        .name-input::placeholder {
+            color: rgba(61, 64, 91, 0.4);
+        }
+
+        /* * BUTTONS
+         * Interactive elements feature hover, focus, and active states.
+         */
+        .btn-primary {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-family: var(--font-ui);
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            background-color: var(--primary-accent);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background-color: #c9654c; /* Slightly darkened Terracotta */
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary:focus-visible {
+            outline: 2px dashed var(--text-color);
+            outline-offset: 4px;
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* * OUTPUT AREA & ANIMATIONS
+         * Handles the display of the compliment and loading states smoothly.
+         */
+        .output-section {
+            margin-top: 2.5rem;
+            min-height: 140px; /* Prevents layout shift during loading/fading */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Loader Animation */
+        .loader {
+            display: none; /* Hidden by default */
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(224, 122, 95, 0.2);
+            border-top-color: var(--primary-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* The actual compliment text */
+        .compliment-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--text-color);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            display: none; /* Hidden until generated */
+        }
+
+        /* Visibility classes managed by JS */
+        .compliment-text.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Copy Button State */
+        .copy-container {
+            margin-top: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .copy-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-family: var(--font-ui);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-color);
+            background-color: transparent;
+            border: 1px solid var(--text-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .btn-copy:hover {
+            background-color: rgba(61, 64, 91, 0.05);
+        }
+
+        .btn-copy:focus-visible {
+            outline: 2px dashed var(--primary-accent);
+            outline-offset: 2px;
+        }
+
+        /* Success state class applied via JS */
+        .btn-copy.success {
+            background-color: var(--secondary-accent);
+            border-color: var(--secondary-accent);
+            color: #FFFFFF;
+        }
+
+        /* SVG Icon styling */
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 480px) {
+            .app-container { padding: 2rem 1.5rem; }
+            .app-title { font-size: 1.75rem; }
+            .compliment-text { font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">Radiance</h1>
+            <p class="app-subtitle">A little generator to brighten your day.</p>
+        </header>
+
+        <!-- 
+          The input area. 
+          Semantically grouped with a clear, programmatically associated label. 
+        -->
+        <div class="input-group">
+            <label for="name-input" class="input-label">Your Name (Optional)</label>
+            <input 
+                type="text" 
+                id="name-input" 
+                class="name-input" 
+                placeholder="e.g., Alex" 
+                autocomplete="off"
+            />
+        </div>
+
+        <button id="generate-btn" class="btn-primary" aria-label="Generate a new compliment">
+            Generate Compliment
+        </button>
+
+        <!-- 
+          Output Section
+          Using aria-live="polite" so screen readers automatically announce 
+          new compliments when they are injected into the DOM without stealing focus.
+        -->
+        <section class="output-section" aria-live="polite" aria-atomic="true">
+            <div id="loader" class="loader" aria-hidden="true"></div>
+            
+            <p id="compliment-display" class="compliment-text"></p>
+            
+            <div id="copy-wrapper" class="copy-container">
+                <button id="copy-btn" class="btn-copy" aria-label="Copy compliment to clipboard">
+                    <svg class="icon copy-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"/>
+                    </svg>
+                    <svg class="icon check-icon" style="display: none;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
+                    </svg>
+                    <span id="copy-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </section>
+        
+        <!-- Visually hidden live region for screen reader copy success announcements -->
+        <div id="a11y-announcer" class="sr-only" aria-live="polite" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"></div>
+    </main>
+
+    <script>
+        /**
+         * COMPLIMENT GENERATOR LOGIC
+         * Encapsulated in an IIFE (Immediately Invoked Function Expression) 
+         * to prevent polluting the global scope and maintain architectural cleanliness.
+         */
+        (() => {
+            // --- DATA MODEL ---
+            // Separating data from logic allows for easy updates/localization later.
+            const complimentsData = [
+                "You have an absolutely infectious energy, [Name]!",
+                "[Name], your creativity is a true inspiration to everyone around you.",
+                "The world is a much brighter place with you in it, [Name].",
+                "You bring out the best in people, [Name]. Never lose that.",
+                "[Name], your perspective on life is incredibly refreshing.",
+                "You possess a rare and wonderful kind of kindness, [Name].",
+                "It's a joy to see you pursue your passions, [Name].",
+                "[Name], you have an impeccable sense of style and grace.",
+                "Your resilience in the face of challenges is truly admirable, [Name].",
+                "You are an absolute delight to be around, [Name].",
+                "[Name], your intelligence and wit never fail to impress.",
+                "You have a heart of gold, [Name], and it shows in everything you do.",
+                "[Name], the way you light up a room is simply magical.",
+                "Your ability to make others feel seen and heard is a superpower, [Name].",
+                "You are making a bigger difference than you realize, [Name].",
+                "You're the human equivalent of a Sunday morning, [Name].",
+                "[Name], you're more fun than a ball pit filled with puppies.",
+                "If we were in a horror movie, [Name], I'd definitely stick by you.",
+                "You have the best ideas, [Name].",
+                "[Name], you're like a perfectly timed high-five.",
+                "Your smile is a literal ray of sunshine, [Name].",
+                "I'm so glad you exist, [Name].",
+                "[Name], you could make a sloth want to run a marathon.",
+                "You're the secret ingredient to a great day, [Name].",
+                "If you were a fruit, you'd be a fine-apple, [Name].",
+                "[Name], you bring the best snacks to the table of life.",
+                "You're an absolute gem, [Name].",
+                "Even if you were cloned, [Name], you'd still be one of a kind.",
+                "[Name], your heart is as big as the ocean.",
+                "You're the reason someone smiled today, [Name].",
+                "If you were a scented candle, [Name], you'd smell like fresh laundry and sunshine.",
+                "[Name], you're the human version of a cozy blanket.",
+                "You make the ordinary extraordinary, [Name].",
+                "Your joy is contagious, [Name].",
+                "[Name], you're a masterpiece.",
+                "You're like a breath of fresh air, [Name].",
+                "If I had to choose between pizza and you, [Name]... it would be a tough choice, but I'd pick you.",
+                "[Name], you're the hero of your own incredible story.",
+                "You have an amazing eye for detail, [Name].",
+                "[Name], you're like a human cup of hot chocolate on a snowy day.",
+                "Your sense of humor is unmatched, [Name].",
+                "You always know the right thing to say, [Name].",
+                "[Name], you are a constant source of inspiration.",
+                "I appreciate you more than words can say, [Name].",
+                "You're like a four-leaf clover, [Name]: hard to find and lucky to have.",
+                "[Name], you have a brilliant glow about you.",
+                "You make adulting look almost easy, [Name].",
+                "Your energy is my favorite kind of caffeine, [Name].",
+                "[Name], you're stronger than a Wi-Fi signal in a coffee shop.",
+                "You could teach a masterclass on being awesome, [Name].",
+                "You are deeply loved and appreciated, [Name].",
+                "[Name], you are the exclamation point in the happiest sentence I could ever write.",
+                "You are an overachiever in the best way possible, [Name].",
+                "You have the kind of smile that makes others smile back, [Name].",
+                "[Name], your generosity knows no limits.",
+                "You are a total rockstar, [Name].",
+                "If joy were a person, it would be you, [Name].",
+                "[Name], you're like finding money in your winter coat.",
+                "You make everything ten times better, [Name].",
+                "You are wonderfully uniquely you, [Name].",
+                "[Name], you're a limited edition.",
+                "You are the sprinkle of magic this world needs, [Name].",
+                "[Name], your logic is sound, but your heart is even better.",
+                "You always find the silver lining, [Name].",
+                "You are fiercely loyal and fiercely loved, [Name].",
+                "[Name], you're like the skip-ad button: a pure relief.",
+                "You are a phenomenal human being, [Name].",
+                "Your perseverance is truly something to behold, [Name].",
+                "[Name], you have an aura of pure sunshine.",
+                "You're the best part of today, [Name].",
+                "I'd trust you to hold my phone while it's unlocked, [Name].",
+                "[Name], you are an oasis of calm in a chaotic world.",
+                "You're my favorite notification, [Name].",
+                "You're a brilliant problem solver, [Name].",
+                "[Name], your spirit is absolutely unbreakable.",
+                "You have the best laugh in the room, [Name].",
+                "You're a treasure, [Name].",
+                "[Name], you're more satisfying than peeling the plastic off new electronics.",
+                "You're the human equivalent of a perfect hair day, [Name].",
+                "You make the impossible look easy, [Name].",
+                "[Name], you're a burst of confetti in a beige room.",
+                "Your vibe is immaculate, [Name].",
+                "You have a beautiful way with words, [Name].",
+                "[Name], you are doing a fantastic job at life.",
+                "You're like a warm hug on a cold day, [Name].",
+                "Your inner beauty shines so brightly, [Name].",
+                "[Name], you are the real deal.",
+                "You could win an award for being you, [Name].",
+                "You have an undeniable charm, [Name].",
+                "[Name], your patience is legendary.",
+                "You are an anchor in the storm, [Name].",
+                "I'm proud of the person you are, [Name].",
+                "[Name], your mind is a fascinating place.",
+                "You always leave things better than you found them, [Name].",
+                "You are an unparalleled source of joy, [Name].",
+                "[Name], you're like finding an extra fry at the bottom of the bag.",
+                "You have such a welcoming spirit, [Name].",
+                "You make the world better just by standing in it, [Name].",
+                "[Name], you are entirely and completely enough.",
+                "You are a work of art, [Name]."
+            ];
+
+            // --- DOM ELEMENTS ---
+            const elements = {
+                nameInput: document.getElementById('name-input'),
+                generateBtn: document.getElementById('generate-btn'),
+                loader: document.getElementById('loader'),
+                complimentDisplay: document.getElementById('compliment-display'),
+                copyWrapper: document.getElementById('copy-wrapper'),
+                copyBtn: document.getElementById('copy-btn'),
+                copyText: document.getElementById('copy-text'),
+                copyIcon: document.querySelector('.copy-icon'),
+                checkIcon: document.querySelector('.check-icon'),
+                announcer: document.getElementById('a11y-announcer')
+            };
+
+            // State to keep track of the currently generated string for copying
+            let currentCompliment = "";
+            let isGenerating = false;
+
+            // --- UTILITY FUNCTIONS ---
+
+            /**
+             * Returns a random compliment from the array.
+             * @returns {string} Unformatted compliment string
+             */
+            const getRandomCompliment = () => {
+                const randomIndex = Math.floor(Math.random() * complimentsData.length);
+                return complimentsData[randomIndex];
+            };
+
+            /**
+             * Formats the string by replacing the [Name] token.
+             * @param {string} template The raw compliment
+             * @param {string} name The user's name
+             * @returns {string} Formatted compliment
+             */
+            const formatCompliment = (template, name) => {
+                const safeName = name.trim();
+                // If no name is provided, default to a friendly fallback
+                const replacement = safeName ? safeName : "my friend";
+                return template.replace(/\[Name\]/g, replacement);
+            };
+
+            /**
+             * Handles the legacy clipboard fallback for environments (like some iframes)
+             * where navigator.clipboard might be blocked.
+             * @param {string} text The text to copy
+             */
+            const fallbackCopyTextToClipboard = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                // Avoid scrolling to bottom
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            // --- EVENT HANDLERS ---
+
+            const handleGenerateClick = () => {
+                // Prevent multiple clicks while animating
+                if (isGenerating) return;
+                isGenerating = true;
+
+                // UI State: Loading
+                elements.generateBtn.disabled = true;
+                elements.complimentDisplay.classList.remove('visible');
+                elements.copyWrapper.classList.remove('visible');
+                
+                // Slight delay to allow fade out before showing loader
+                setTimeout(() => {
+                    elements.loader.style.display = 'block';
+                    
+                    // Simulate network/generation delay for UX pacing (600ms)
+                    setTimeout(() => {
+                        const rawCompliment = getRandomCompliment();
+                        currentCompliment = formatCompliment(rawCompliment, elements.nameInput.value);
+
+                        // Update DOM
+                        elements.complimentDisplay.textContent = `"${currentCompliment}"`;
+                        
+                        // UI State: Reveal
+                        elements.loader.style.display = 'none';
+                        elements.complimentDisplay.classList.add('visible');
+                        elements.copyWrapper.classList.add('visible');
+                        
+                        // Reset generator state
+                        elements.generateBtn.disabled = false;
+                        isGenerating = false;
+
+                    }, 600);
+                }, 300); // 300ms matches the CSS transition time
+            };
+
+            const handleCopyClick = () => {
+                if (!currentCompliment) return;
+
+                // Copy logic
+                if (navigator.clipboard && window.isSecureContext) {
+                    // Standard modern clipboard API
+                    navigator.clipboard.writeText(currentCompliment).catch(() => {
+                        fallbackCopyTextToClipboard(currentCompliment);
+                    });
+                } else {
+                    // Fallback for non-secure contexts or strict iframes
+                    fallbackCopyTextToClipboard(currentCompliment);
+                }
+
+                // UI State: Success Feedback
+                elements.copyBtn.classList.add('success');
+                elements.copyText.textContent = "Copied!";
+                elements.copyIcon.style.display = 'none';
+                elements.checkIcon.style.display = 'block';
+                
+                // Accessibility: Announce success to screen readers
+                elements.announcer.textContent = "Compliment copied to clipboard";
+
+                // Revert success state after 2 seconds
+                setTimeout(() => {
+                    elements.copyBtn.classList.remove('success');
+                    elements.copyText.textContent = "Copy to Clipboard";
+                    elements.copyIcon.style.display = 'block';
+                    elements.checkIcon.style.display = 'none';
+                    // Clear announcer to allow future announcements
+                    elements.announcer.textContent = ""; 
+                }, 2000);
+            };
+
+            // --- INITIALIZATION ---
+            
+            // Event Listeners
+            elements.generateBtn.addEventListener('click', handleGenerateClick);
+            elements.copyBtn.addEventListener('click', handleCopyClick);
+
+            // Allow 'Enter' key inside the input field to trigger generation
+            elements.nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerateClick();
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>
