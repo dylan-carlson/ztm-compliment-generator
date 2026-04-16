@@ -15,28 +15,23 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
 
     <style>
-        /* * DESIGN SYSTEM & DESIGN TOKENS
-         * Centralizing colors and fonts using CSS Custom Properties for maintainability 
-         * and to enforce a strict design system.
-         */
+        /* * DESIGN SYSTEM & DESIGN TOKENS */
         :root {
-            --bg-color: #F9F7F3;         /* Soft Pearl */
-            --text-color: #3D405B;       /* Deep Slate */
-            --primary-accent: #E07A5F;   /* Terracotta Coral */
-            --secondary-accent: #81B29A; /* Calm Sage */
+            --bg-color: #F9F7F3;         
+            --text-color: #3D405B;       
+            --primary-accent: #E07A5F;   
+            --secondary-accent: #81B29A; 
+            --joke-accent: #F2CC8F;      
             
             --font-display: 'Fraunces', serif;
             --font-ui: 'DM Sans', sans-serif;
             
             --transition-speed: 0.3s;
-            --border-radius: 12px;
+            --border-radius: 20px;
+            --shadow-card: 0 20px 40px rgba(61, 64, 91, 0.15), 0 5px 15px rgba(0,0,0,0.05);
             --shadow-sm: 0 4px 6px rgba(61, 64, 91, 0.08);
-            --shadow-md: 0 10px 25px rgba(61, 64, 91, 0.12);
         }
 
-        /* * RESET & BASE STYLES
-         * Ensuring cross-browser consistency and accessible sizing.
-         */
         *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
@@ -44,7 +39,10 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            /* Visually interesting animated gradient background */
+            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%, #fdfbfb 100%);
+            background-size: 200% 200%;
+            animation: gradientMove 15s ease infinite;
             color: var(--text-color);
             font-family: var(--font-ui);
             min-height: 100vh;
@@ -57,47 +55,144 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* * LAYOUT ARCHITECTURE
-         * Using a centered card layout to focus user attention on the core task.
-         */
-        .app-container {
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* * LAYOUT ARCHITECTURE */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
             width: 100%;
-            max-width: 540px;
+            max-width: 500px;
+        }
+
+        /* * PLAYING CARD STYLES */
+        .playing-card {
+            width: 350px;
+            height: 490px; /* Standard 2.5 : 3.5 aspect ratio */
             background-color: #FFFFFF;
             border-radius: var(--border-radius);
-            box-shadow: var(--shadow-md);
-            padding: 3rem 2.5rem;
-            text-align: center;
+            box-shadow: var(--shadow-card);
             position: relative;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Inner border to mimic a real playing card */
+            border: 8px solid white;
+            outline: 1px solid rgba(0,0,0,0.05);
+            outline-offset: -8px;
         }
 
-        /* * TYPOGRAPHY
-         */
-        .app-header {
-            margin-bottom: 2rem;
+        /* Card Decorators (Circles) */
+        .decorator {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.5s ease;
         }
 
-        .app-title {
+        .decorator.top-right {
+            top: 20px;
+            right: 20px;
+        }
+
+        .decorator.bottom-left {
+            bottom: 20px;
+            left: 20px;
+            /* Rotate the bottom one to mimic real playing card indices */
+            transform: rotate(180deg);
+        }
+
+        /* Card Content & Animations */
+        .card-content-area {
+            width: 100%;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(61, 64, 91, 0.1);
+            border-top-color: var(--text-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .text-main, .text-punchline {
             font-family: var(--font-display);
-            font-size: 2.25rem;
-            font-weight: 600;
             color: var(--text-color);
-            margin-bottom: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            display: none;
+            width: 100%;
         }
 
-        .app-subtitle {
-            font-size: 1rem;
-            color: rgba(61, 64, 91, 0.7); /* Muted Deep Slate */
+        .text-main {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .text-main.is-compliment {
+            font-style: italic;
         }
 
-        /* * INPUT GROUP
-         * Styled for clarity with explicit, visible labels for optimal accessibility.
-         */
+        .text-punchline {
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            color: var(--primary-accent);
+            font-weight: 700;
+        }
+
+        .visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* * CONTROLS SECTION */
+        .controls-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
         .input-group {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            margin-bottom: 1.5rem;
             text-align: left;
         }
 
@@ -114,232 +209,186 @@
             font-family: var(--font-ui);
             font-size: 1rem;
             color: var(--text-color);
-            background-color: var(--bg-color);
+            background-color: white;
             border: 2px solid transparent;
             border-radius: 8px;
-            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
         }
 
-        /* Custom focus rings for WCAG compliance and keyboard navigation */
         .name-input:focus {
             outline: none;
             border-color: var(--primary-accent);
             box-shadow: 0 0 0 3px rgba(224, 122, 95, 0.2);
         }
 
-        .name-input::placeholder {
-            color: rgba(61, 64, 91, 0.4);
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
         }
 
-        /* * BUTTONS
-         * Interactive elements feature hover, focus, and active states.
-         */
-        .btn-primary {
+        .btn {
             width: 100%;
-            padding: 1rem 1.5rem;
+            padding: 0.875rem 1rem;
             font-family: var(--font-ui);
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 700;
-            color: #FFFFFF;
-            background-color: var(--primary-accent);
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.1s ease, background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            transition: transform 0.1s ease, filter var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
             box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        .btn-primary:hover {
-            background-color: #c9654c; /* Slightly darkened Terracotta */
+        .btn:hover {
+            filter: brightness(0.95);
             transform: translateY(-1px);
         }
 
-        .btn-primary:active {
+        .btn:active {
             transform: translateY(1px);
         }
-
-        .btn-primary:focus-visible {
-            outline: 2px dashed var(--text-color);
-            outline-offset: 4px;
-        }
         
-        .btn-primary:disabled {
+        .btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* * OUTPUT AREA & ANIMATIONS
-         * Handles the display of the compliment and loading states smoothly.
-         */
-        .output-section {
-            margin-top: 2.5rem;
-            min-height: 140px; /* Prevents layout shift during loading/fading */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .btn-primary {
+            background-color: var(--primary-accent);
+            color: #FFFFFF;
         }
 
-        /* Loader Animation */
-        .loader {
-            display: none; /* Hidden by default */
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(224, 122, 95, 0.2);
-            border-top-color: var(--primary-accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            position: absolute;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* The actual compliment text */
-        .compliment-text {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            font-style: italic;
+        .btn-secondary {
+            background-color: var(--joke-accent);
             color: var(--text-color);
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            display: none; /* Hidden until generated */
-        }
-
-        /* Visibility classes managed by JS */
-        .compliment-text.visible {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
         }
 
         /* Copy Button State */
-        .copy-container {
-            margin-top: 1.5rem;
+        .copy-wrapper {
+            display: flex;
+            justify-content: center;
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--transition-speed) ease;
+            height: 0;
+            overflow: hidden;
         }
 
-        .copy-container.visible {
+        .copy-wrapper.visible {
             opacity: 1;
             pointer-events: auto;
+            height: auto;
+            padding-top: 0.5rem;
         }
 
         .btn-copy {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-family: var(--font-ui);
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-color);
             background-color: transparent;
             border: 1px solid var(--text-color);
+            color: var(--text-color);
             border-radius: 20px;
-            cursor: pointer;
-            transition: all var(--transition-speed) ease;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
-        .btn-copy:hover {
-            background-color: rgba(61, 64, 91, 0.05);
-        }
-
-        .btn-copy:focus-visible {
-            outline: 2px dashed var(--primary-accent);
-            outline-offset: 2px;
-        }
-
-        /* Success state class applied via JS */
         .btn-copy.success {
             background-color: var(--secondary-accent);
             border-color: var(--secondary-accent);
             color: #FFFFFF;
         }
 
-        /* SVG Icon styling */
         .icon {
             width: 16px;
             height: 16px;
             fill: currentColor;
         }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 480px) {
-            .app-container { padding: 2rem 1.5rem; }
-            .app-title { font-size: 1.75rem; }
-            .compliment-text { font-size: 1.25rem; }
+
+        /* Mobile overrides */
+        @media (max-width: 400px) {
+            .playing-card {
+                width: 90vw;
+                height: 128vw; /* Maintain aspect ratio roughly */
+                padding: 1.5rem;
+            }
+            .button-group {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-    <main class="app-container">
-        <header class="app-header">
-            <h1 class="app-title">Radiance</h1>
-            <p class="app-subtitle">A little generator to brighten your day.</p>
-        </header>
-
-        <!-- 
-          The input area. 
-          Semantically grouped with a clear, programmatically associated label. 
-        -->
-        <div class="input-group">
-            <label for="name-input" class="input-label">Your Name (Optional)</label>
-            <input 
-                type="text" 
-                id="name-input" 
-                class="name-input" 
-                placeholder="e.g., Alex" 
-                autocomplete="off"
-            />
+    <main class="app-wrapper">
+        
+        <!-- The Playing Card -->
+        <div class="playing-card" id="card" aria-live="polite" aria-atomic="true">
+            <div class="decorator top-right" id="dec-tr" aria-hidden="true"></div>
+            
+            <div class="card-content-area">
+                <div id="loader" class="loader" aria-hidden="true"></div>
+                <p id="text-main" class="text-main"></p>
+                <p id="text-punchline" class="text-punchline"></p>
+            </div>
+            
+            <div class="decorator bottom-left" id="dec-bl" aria-hidden="true"></div>
         </div>
 
-        <button id="generate-btn" class="btn-primary" aria-label="Generate a new compliment">
-            Generate Compliment
-        </button>
+        <!-- Controls Section (Outside the card) -->
+        <div class="controls-container">
+            <header class="app-header" style="text-align: center; margin-bottom: 0.5rem;">
+                <h1 class="app-title" style="font-family: var(--font-display); font-size: 1.75rem;">Card Drawer</h1>
+                <p class="app-subtitle" style="font-size: 0.875rem; opacity: 0.7;">Draw a compliment or a joke!</p>
+            </header>
 
-        <!-- 
-          Output Section
-          Using aria-live="polite" so screen readers automatically announce 
-          new compliments when they are injected into the DOM without stealing focus.
-        -->
-        <section class="output-section" aria-live="polite" aria-atomic="true">
-            <div id="loader" class="loader" aria-hidden="true"></div>
-            
-            <p id="compliment-display" class="compliment-text"></p>
-            
-            <div id="copy-wrapper" class="copy-container">
-                <button id="copy-btn" class="btn-copy" aria-label="Copy compliment to clipboard">
+            <div class="input-group">
+                <label for="name-input" class="input-label">Your Name (Optional)</label>
+                <input 
+                    type="text" 
+                    id="name-input" 
+                    class="name-input" 
+                    placeholder="e.g., Alex" 
+                    autocomplete="off"
+                />
+            </div>
+
+            <div class="button-group">
+                <button id="gen-compliment-btn" class="btn btn-primary" aria-label="Generate a new compliment">
+                    <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    Compliment
+                </button>
+                <button id="gen-joke-btn" class="btn btn-secondary" aria-label="Generate a new joke">
+                    <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM8.5 8c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zm3.5 9.5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5zm3.5-6.5c-.83 0-1.5-.67-1.5-1.5S14.67 8 15.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    Joke
+                </button>
+            </div>
+
+            <div id="copy-wrapper" class="copy-wrapper">
+                <button id="copy-btn" class="btn btn-copy" aria-label="Copy to clipboard">
                     <svg class="icon copy-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"/>
                     </svg>
                     <svg class="icon check-icon" style="display: none;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
                     </svg>
-                    <span id="copy-text">Copy to Clipboard</span>
+                    <span id="copy-text">Copy Text</span>
                 </button>
             </div>
-        </section>
+        </div>
         
-        <!-- Visually hidden live region for screen reader copy success announcements -->
         <div id="a11y-announcer" class="sr-only" aria-live="polite" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"></div>
     </main>
 
     <script>
-        /**
-         * COMPLIMENT GENERATOR LOGIC
-         * Encapsulated in an IIFE (Immediately Invoked Function Expression) 
-         * to prevent polluting the global scope and maintain architectural cleanliness.
-         */
         (() => {
             // --- DATA MODEL ---
-            // Separating data from logic allows for easy updates/localization later.
+            
+            // 1. Compliments (Original 100)
             const complimentsData = [
                 "You have an absolutely infectious energy, [Name]!",
                 "[Name], your creativity is a true inspiration to everyone around you.",
@@ -443,156 +492,237 @@
                 "You are a work of art, [Name]."
             ];
 
+            // 2. Jokes (50 Unique, Family-Friendly)
+            const jokesData = [
+                { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field." },
+                { setup: "What do you call a fake noodle?", punchline: "An impasta." },
+                { setup: "Why did the bicycle fall over?", punchline: "Because it was two tired." },
+                { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear." },
+                { setup: "Why don't skeletons fight each other?", punchline: "They don't have the guts." },
+                { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese." },
+                { setup: "Why did the math book look sad?", punchline: "Because it had too many problems." },
+                { setup: "What do you call a pony with a cough?", punchline: "A little horse." },
+                { setup: "Why couldn't the leopard play hide and seek?", punchline: "Because he was always spotted." },
+                { setup: "What do you get when you cross a snowman and a vampire?", punchline: "Frostbite." },
+                { setup: "Why did the cookie go to the hospital?", punchline: "Because he felt crummy." },
+                { setup: "What do you call a dinosaur that is sleeping?", punchline: "A dino-snore." },
+                { setup: "Why are ghosts bad liars?", punchline: "Because you can see right through them." },
+                { setup: "What has ears but cannot hear?", punchline: "A cornfield." },
+                { setup: "Why did the tomato turn red?", punchline: "Because it saw the salad dressing." },
+                { setup: "What do you call a boomerang that won't come back?", punchline: "A stick." },
+                { setup: "Why did the golfer bring two pairs of pants?", punchline: "In case he got a hole in one." },
+                { setup: "What did the left eye say to the right eye?", punchline: "Between you and me, something smells." },
+                { setup: "What do you call a pig that does karate?", punchline: "A pork chop." },
+                { setup: "Why did the picture go to jail?", punchline: "Because it was framed." },
+                { setup: "What do you call a cow with no legs?", punchline: "Ground beef." },
+                { setup: "Why do bees have sticky hair?", punchline: "Because they use honeycombs." },
+                { setup: "What runs around a whole yard without moving?", punchline: "A fence." },
+                { setup: "Why did the melon jump into the lake?", punchline: "It wanted to be a water-melon." },
+                { setup: "What do you call an alligator in a vest?", punchline: "An investigator." },
+                { setup: "Why don't eggs tell jokes?", punchline: "They'd crack each other up." },
+                { setup: "What do you call a sleeping bull?", punchline: "A bulldozer." },
+                { setup: "Why did the banana go to the doctor?", punchline: "It wasn't peeling well." },
+                { setup: "What do elves learn in school?", punchline: "The Elf-abet." },
+                { setup: "Why did the student eat his homework?", punchline: "Because the teacher said it was a piece of cake." },
+                { setup: "What do you call a funny mountain?", punchline: "Hill-arious." },
+                { setup: "Why did the invisible man turn down the job offer?", punchline: "He couldn't see himself doing it." },
+                { setup: "What stays in the corner but travels the world?", punchline: "A stamp." },
+                { setup: "Why do fish live in salt water?", punchline: "Because pepper makes them sneeze." },
+                { setup: "What do you call a snowman with a six-pack?", punchline: "An abdominal snowman." },
+                { setup: "Why couldn't the sailor learn his alphabet?", punchline: "Because he kept getting lost at C." },
+                { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved." },
+                { setup: "Why did the stadium get hot after the game?", punchline: "Because all of the fans left." },
+                { setup: "What do you call a factory that makes okay products?", punchline: "A satisfactory." },
+                { setup: "Why did the cow cross the road?", punchline: "To get to the udder side." },
+                { setup: "What kind of room has no doors or windows?", punchline: "A mushroom." },
+                { setup: "Why did the music teacher need a ladder?", punchline: "To reach the high notes." },
+                { setup: "What do you call a group of musical whales?", punchline: "An orca-stra." },
+                { setup: "Why did the computer go to the doctor?", punchline: "Because it had a terminal illness." },
+                { setup: "What happens when you cross a sheep and a kangaroo?", punchline: "A woolly jumper." },
+                { setup: "Why did the physics teacher break up with the biology teacher?", punchline: "There was no chemistry." },
+                { setup: "What do you call a superhero with a messy room?", punchline: "Bratman." },
+                { setup: "Why did the frog take the bus to work today?", punchline: "His car got toad away." },
+                { setup: "What do you call an everyday potato?", punchline: "A commentator." },
+                { setup: "Why are spiders so smart?", punchline: "They can find everything on the web." }
+            ];
+
+            // 3. Decorator Options
+            const decoratorColors = ["#FFB3BA", "#FFDFBA", "#FFFFBA", "#B5EAD7", "#C7CEEA", "#E2F0CB", "#FFC4C4", "#FAD0C9", "#B4F8C8", "#A0E7E5"];
+            const decoratorEmojis = ["🌟", "✨", "🎈", "🎨", "🎭", "🎪", "🎢", "🎡", "🎠", "🚀", "🛸", "🌈", "☀️", "🌻", "🍀", "🍄", "🦋", "🦉", "🦄", "👑", "💎", "💡", "🧩", "🎲", "🎯"];
+
             // --- DOM ELEMENTS ---
-            const elements = {
+            const els = {
                 nameInput: document.getElementById('name-input'),
-                generateBtn: document.getElementById('generate-btn'),
+                genComplimentBtn: document.getElementById('gen-compliment-btn'),
+                genJokeBtn: document.getElementById('gen-joke-btn'),
                 loader: document.getElementById('loader'),
-                complimentDisplay: document.getElementById('compliment-display'),
+                textMain: document.getElementById('text-main'),
+                textPunchline: document.getElementById('text-punchline'),
                 copyWrapper: document.getElementById('copy-wrapper'),
                 copyBtn: document.getElementById('copy-btn'),
                 copyText: document.getElementById('copy-text'),
                 copyIcon: document.querySelector('.copy-icon'),
                 checkIcon: document.querySelector('.check-icon'),
-                announcer: document.getElementById('a11y-announcer')
+                announcer: document.getElementById('a11y-announcer'),
+                decTopRight: document.getElementById('dec-tr'),
+                decBottomLeft: document.getElementById('dec-bl')
             };
 
-            // State to keep track of the currently generated string for copying
-            let currentCompliment = "";
+            // State
+            let currentTextToCopy = "";
             let isGenerating = false;
+            let punchlineTimeout = null;
 
             // --- UTILITY FUNCTIONS ---
+            
+            const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
 
-            /**
-             * Returns a random compliment from the array.
-             * @returns {string} Unformatted compliment string
-             */
-            const getRandomCompliment = () => {
-                const randomIndex = Math.floor(Math.random() * complimentsData.length);
-                return complimentsData[randomIndex];
+            const updateDecorators = () => {
+                // Randomize colors
+                els.decTopRight.style.backgroundColor = getRandomItem(decoratorColors);
+                els.decBottomLeft.style.backgroundColor = getRandomItem(decoratorColors);
+                
+                // Randomize emojis
+                els.decTopRight.textContent = getRandomItem(decoratorEmojis);
+                els.decBottomLeft.textContent = getRandomItem(decoratorEmojis);
             };
 
-            /**
-             * Formats the string by replacing the [Name] token.
-             * @param {string} template The raw compliment
-             * @param {string} name The user's name
-             * @returns {string} Formatted compliment
-             */
-            const formatCompliment = (template, name) => {
-                const safeName = name.trim();
-                // If no name is provided, default to a friendly fallback
-                const replacement = safeName ? safeName : "my friend";
-                return template.replace(/\[Name\]/g, replacement);
+            const resetOutputUI = () => {
+                clearTimeout(punchlineTimeout);
+                els.textMain.classList.remove('visible', 'is-compliment');
+                els.textPunchline.classList.remove('visible');
+                els.copyWrapper.classList.remove('visible');
+                els.textMain.textContent = "";
+                els.textPunchline.textContent = "";
             };
 
-            /**
-             * Handles the legacy clipboard fallback for environments (like some iframes)
-             * where navigator.clipboard might be blocked.
-             * @param {string} text The text to copy
-             */
-            const fallbackCopyTextToClipboard = (text) => {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                // Avoid scrolling to bottom
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback: Oops, unable to copy', err);
-                }
-                document.body.removeChild(textArea);
+            const toggleButtons = (disabled) => {
+                els.genComplimentBtn.disabled = disabled;
+                els.genJokeBtn.disabled = disabled;
             };
 
-            // --- EVENT HANDLERS ---
+            // --- GENERATORS ---
 
-            const handleGenerateClick = () => {
-                // Prevent multiple clicks while animating
+            const handleGenerateCompliment = () => {
                 if (isGenerating) return;
                 isGenerating = true;
 
-                // UI State: Loading
-                elements.generateBtn.disabled = true;
-                elements.complimentDisplay.classList.remove('visible');
-                elements.copyWrapper.classList.remove('visible');
+                updateDecorators();
+                resetOutputUI();
+                toggleButtons(true);
                 
-                // Slight delay to allow fade out before showing loader
                 setTimeout(() => {
-                    elements.loader.style.display = 'block';
+                    els.loader.style.display = 'block';
                     
-                    // Simulate network/generation delay for UX pacing (600ms)
                     setTimeout(() => {
-                        const rawCompliment = getRandomCompliment();
-                        currentCompliment = formatCompliment(rawCompliment, elements.nameInput.value);
+                        const rawCompliment = getRandomItem(complimentsData);
+                        const safeName = els.nameInput.value.trim();
+                        const replacement = safeName ? safeName : "my friend";
+                        const finalCompliment = rawCompliment.replace(/\[Name\]/g, replacement);
 
-                        // Update DOM
-                        elements.complimentDisplay.textContent = `"${currentCompliment}"`;
+                        currentTextToCopy = finalCompliment;
+
+                        els.textMain.textContent = `"${finalCompliment}"`;
+                        els.textMain.classList.add('is-compliment');
                         
-                        // UI State: Reveal
-                        elements.loader.style.display = 'none';
-                        elements.complimentDisplay.classList.add('visible');
-                        elements.copyWrapper.classList.add('visible');
+                        els.loader.style.display = 'none';
+                        els.textMain.classList.add('visible');
+                        els.copyWrapper.classList.add('visible');
                         
-                        // Reset generator state
-                        elements.generateBtn.disabled = false;
+                        toggleButtons(false);
                         isGenerating = false;
-
                     }, 600);
-                }, 300); // 300ms matches the CSS transition time
+                }, 300);
             };
 
-            const handleCopyClick = () => {
-                if (!currentCompliment) return;
+            const handleGenerateJoke = () => {
+                if (isGenerating) return;
+                isGenerating = true;
 
-                // Copy logic
+                updateDecorators();
+                resetOutputUI();
+                toggleButtons(true);
+                
+                setTimeout(() => {
+                    els.loader.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        const joke = getRandomItem(jokesData);
+                        currentTextToCopy = `${joke.setup} ... ${joke.punchline}`;
+
+                        els.textMain.textContent = joke.setup;
+                        els.textPunchline.textContent = joke.punchline;
+                        
+                        els.loader.style.display = 'none';
+                        els.textMain.classList.add('visible');
+                        
+                        // Delay punchline
+                        punchlineTimeout = setTimeout(() => {
+                            els.textPunchline.classList.add('visible');
+                            els.copyWrapper.classList.add('visible');
+                            
+                            toggleButtons(false);
+                            isGenerating = false;
+                        }, 2500); // 2.5 second wait for comic timing
+                        
+                    }, 600);
+                }, 300);
+            };
+
+            // --- CLIPBOARD ---
+
+            const handleCopyClick = () => {
+                if (!currentTextToCopy) return;
+
+                const fallbackCopy = (text) => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try { document.execCommand('copy'); } catch (err) {}
+                    document.body.removeChild(textArea);
+                };
+
                 if (navigator.clipboard && window.isSecureContext) {
-                    // Standard modern clipboard API
-                    navigator.clipboard.writeText(currentCompliment).catch(() => {
-                        fallbackCopyTextToClipboard(currentCompliment);
-                    });
+                    navigator.clipboard.writeText(currentTextToCopy).catch(() => fallbackCopy(currentTextToCopy));
                 } else {
-                    // Fallback for non-secure contexts or strict iframes
-                    fallbackCopyTextToClipboard(currentCompliment);
+                    fallbackCopy(currentTextToCopy);
                 }
 
-                // UI State: Success Feedback
-                elements.copyBtn.classList.add('success');
-                elements.copyText.textContent = "Copied!";
-                elements.copyIcon.style.display = 'none';
-                elements.checkIcon.style.display = 'block';
-                
-                // Accessibility: Announce success to screen readers
-                elements.announcer.textContent = "Compliment copied to clipboard";
+                // Success UI State
+                els.copyBtn.classList.add('success');
+                els.copyText.textContent = "Copied!";
+                els.copyIcon.style.display = 'none';
+                els.checkIcon.style.display = 'block';
+                els.announcer.textContent = "Text copied to clipboard";
 
-                // Revert success state after 2 seconds
                 setTimeout(() => {
-                    elements.copyBtn.classList.remove('success');
-                    elements.copyText.textContent = "Copy to Clipboard";
-                    elements.copyIcon.style.display = 'block';
-                    elements.checkIcon.style.display = 'none';
-                    // Clear announcer to allow future announcements
-                    elements.announcer.textContent = ""; 
+                    els.copyBtn.classList.remove('success');
+                    els.copyText.textContent = "Copy Text";
+                    els.copyIcon.style.display = 'block';
+                    els.checkIcon.style.display = 'none';
+                    els.announcer.textContent = ""; 
                 }, 2000);
             };
 
             // --- INITIALIZATION ---
             
-            // Event Listeners
-            elements.generateBtn.addEventListener('click', handleGenerateClick);
-            elements.copyBtn.addEventListener('click', handleCopyClick);
+            els.genComplimentBtn.addEventListener('click', handleGenerateCompliment);
+            els.genJokeBtn.addEventListener('click', handleGenerateJoke);
+            els.copyBtn.addEventListener('click', handleCopyClick);
 
-            // Allow 'Enter' key inside the input field to trigger generation
-            elements.nameInput.addEventListener('keypress', (e) => {
+            els.nameInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleGenerateClick();
+                    // Default to compliment on enter, or contextually guess
+                    handleGenerateCompliment(); 
                 }
             });
+
+            // Initialize decorators on load
+            updateDecorators();
 
         })();
     </script>
