@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compliment Generator</title>
     
+    <!-- SVG Favicon: A stylized playing card with a heart and decorator accents -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='15' y='10' width='70' height='80' rx='10' fill='%23fff' stroke='%233D405B' stroke-width='6'/%3E%3Cpath d='M50 70 C 50 70, 25 45, 25 30 C 25 15, 45 15, 50 25 C 55 15, 75 15, 75 30 C 75 45, 50 70, 50 70 Z' fill='%23E07A5F'/%3E%3Ccircle cx='28' cy='22' r='5' fill='%23F2CC8F'/%3E%3Ccircle cx='72' cy='78' r='5' fill='%2381B29A'/%3E%3C/svg%3E" type="image/svg+xml">
+
     <!-- 
       Preconnecting to Google Fonts for performance optimization.
       Fraunces is used for expressive headings/quotes.
@@ -39,10 +42,14 @@
         }
 
         body {
-            /* Visually interesting animated gradient background */
-            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%, #fdfbfb 100%);
-            background-size: 200% 200%;
-            animation: gradientMove 15s ease infinite;
+            /* Elegant "Matte Paper": Static subtle noise over a very soft, slow-shifting pastel ambient glow */
+            background-color: var(--bg-color);
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+                linear-gradient(135deg, rgba(224, 122, 95, 0.08) 0%, rgba(242, 204, 143, 0.08) 50%, rgba(129, 178, 154, 0.08) 100%);
+            background-size: 150px 150px, 300% 300%;
+            animation: softAmbientGlow 20s ease-in-out infinite alternate;
+            
             color: var(--text-color);
             font-family: var(--font-ui);
             min-height: 100vh;
@@ -55,10 +62,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes softAmbientGlow {
+            0% { background-position: 0px 0px, 0% 50%; }
+            100% { background-position: 0px 0px, 100% 50%; }
         }
 
         /* * LAYOUT ARCHITECTURE */
@@ -68,12 +74,12 @@
             align-items: center;
             gap: 2rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 350px; /* Constrain the entire wrapper to the card's intended width */
         }
 
         /* * PLAYING CARD STYLES */
         .playing-card {
-            width: 350px;
+            width: 100%; /* Fill the wrapper so it perfectly matches the controls */
             height: 490px; /* Standard 2.5 : 3.5 aspect ratio */
             background-color: #FFFFFF;
             border-radius: var(--border-radius);
@@ -312,7 +318,6 @@
         /* Mobile overrides */
         @media (max-width: 400px) {
             .playing-card {
-                width: 90vw;
                 height: 128vw; /* Maintain aspect ratio roughly */
                 padding: 1.5rem;
             }
